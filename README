@@ -3,3 +3,9 @@ rows of them as sound signals for a whirly, surreal effect. Control
 with number keys, some letter keys, and the mouse. Press 'm' to toggle
 excitation with a microphone. (It probably won't start without a
 microphone, even though it's not required.)
+
+The easiest way to use this is to open Processing and paste the
+contents of springy.pde into into it, then run. You need the Minim
+add-on, though:
+
+  Minim: http://code.compartmental.net/tools/minim/

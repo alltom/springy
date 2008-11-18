@@ -2,17 +2,17 @@ import ddf.minim.*;
 import ddf.minim.signals.*;
 import processing.opengl.*;
 
-final int SPRINGS = 10;
+final int STRINGS = 10;
 final int POINTS = 100;
-double[][] pos = new double[SPRINGS][POINTS];
-double[][] vel = new double[SPRINGS][POINTS];
-boolean[][] fixed = new boolean[SPRINGS][POINTS];
-color[] col = new color[SPRINGS];
+double[][] pos = new double[STRINGS][POINTS];
+double[][] vel = new double[STRINGS][POINTS];
+boolean[][] fixed = new boolean[STRINGS][POINTS];
+color[] col = new color[STRINGS];
 
 Minim minim;
 AudioInput mic;
 AudioOutput speaker;
-SpringSound[] sounds = new SpringSound[SPRINGS];
+SpringSound[] sounds = new SpringSound[STRINGS];
 
 // k1: spring constant between points on the same string
 // k2: spring constant between points on adjacent strings
@@ -23,15 +23,15 @@ int spacing = 4;
 float angle = 0;
 
 void physics() {
-  for(int spring = 0; spring < SPRINGS; spring++) {
+  for(int string = 0; string < STRINGS; string++) {
     for(int point = 0; point < POINTS; point++) {
       // don't physics the fixed points
-      if(fixed[spring][point]) continue;
+      if(fixed[string][point]) continue;
       
       // kill switch!
       if(mousePressed) {
-        pos[spring][point] *= map(mouseY, 0, height, 0.5, 1);
-        vel[spring][point] *= map(mouseY, 0, height, 0.5, 1);
+        pos[string][point] *= map(mouseY, 0, height, 0.5, 1);
+        vel[string][point] *= map(mouseY, 0, height, 0.5, 1);
         continue;
       }
 
@@ -39,21 +39,21 @@ void physics() {
 
       // horizontal
       if(point > 0)
-        force += k1 * (pos[spring][point-1] - pos[spring][point]);
+        force += k1 * (pos[string][point-1] - pos[string][point]);
       if(point < POINTS-1)
-        force += k1 * (pos[spring][point+1] - pos[spring][point]);
+        force += k1 * (pos[string][point+1] - pos[string][point]);
 
       // vertical
-      if(spring > 0)
-        force += k2 * (pos[spring-1][point] - pos[spring][point]);
-      if(spring < SPRINGS-1)
-        force += k2 * (pos[spring+1][point] - pos[spring][point]);
+      if(string > 0)
+        force += k2 * (pos[string-1][point] - pos[string][point]);
+      if(string < STRINGS-1)
+        force += k2 * (pos[string+1][point] - pos[string][point]);
 
-      force -= damping * vel[spring][point]; // damping
+      force -= damping * vel[string][point]; // damping
       
       // Euler integration (lame, but sometimes passable)
-      vel[spring][point] += force;
-      pos[spring][point] += vel[spring][point];
+      vel[string][point] += force;
+      pos[string][point] += vel[string][point];
     }
   }
 }
@@ -65,12 +65,12 @@ void painting() {
   rotateY(angle);
   angle += 0.01;
   
-  for(int spring = 0; spring < SPRINGS; spring++) {
+  for(int string = 0; string < STRINGS; string++) {
     
-    float radius = 10; // + (SPRINGS-spring)*4;
+    float radius = 10; // + (STRINGS-string)*4;
 
     pushMatrix();
-    translate(0, (SPRINGS-spring) * spacing);
+    translate(0, (STRINGS-string) * spacing);
     
     pushMatrix();
     rotateX(PI/2);
@@ -81,14 +81,14 @@ void painting() {
     
     for(int point = 0; point < POINTS; point++) {
 
-      int c = (int)((pos[spring][point] * 128. + 128.));
+      int c = (int)((pos[string][point] * 128. + 128.));
       fill(c, c, c);
       noStroke();
       
       /* tower */
       pushMatrix();
       rotateY(map(point, 0, POINTS, 0, 2*PI));
-      translate(0, 0, radius + (float) (pos[spring][point]));
+      translate(0, 0, radius + (float) (pos[string][point]));
       scale(0.3, 1, 1);
       box(4);
       popMatrix();
@@ -96,7 +96,7 @@ void painting() {
       
       /* pyramid tower *
       pushMatrix();
-      translate(0, -(float) (pos[spring][point]));
+      translate(0, -(float) (pos[string][point]));
       rotateY(map(point, 0, POINTS, 0, 2*PI));
       translate(0, 0, radius);
       scale(0.3, 1, 1);
@@ -106,9 +106,9 @@ void painting() {
       
       /* half-sphere *
       pushMatrix();
-      rotateX(map(spring, 0, SPRINGS, 0, PI));
+      rotateX(map(string, 0, STRINGS, 0, PI));
       rotateY(map(point, 0, POINTS, 0, PI));
-      translate(0, 0, 30 + (float) (pos[spring][point]));
+      translate(0, 0, 30 + (float) (pos[string][point]));
       box(2);
       popMatrix();
       /* */
@@ -127,30 +127,30 @@ void setup() {
   println(width + ", " + height);
   noStroke();
   
-  camera(0.0, -SPRINGS*spacing/10, 50.0, // eyeX, eyeY, eyeZ
-         0.0, SPRINGS*spacing/2, 0.0, // centerX, centerY, centerZ
+  camera(0.0, -STRINGS*spacing/10, 50.0, // eyeX, eyeY, eyeZ
+         0.0, STRINGS*spacing/2, 0.0, // centerX, centerY, centerZ
          0.0, 1.0, 0.0); // upX, upY, upZ
 
   // pick some nice colors
-  for(int spring = 0; spring < SPRINGS; spring++)
-    col[spring] = color(random(128)+128, random(128)+128, random(128)+128);
+  for(int string = 0; string < STRINGS; string++)
+    col[string] = color(random(128)+128, random(128)+128, random(128)+128);
 
   // fix (freeze) the endpoints
-  for(int spring = 0; spring < SPRINGS; spring++) {
-    fixed[spring][0] = true;
-    fixed[spring][POINTS-1] = true;
+  for(int string = 0; string < STRINGS; string++) {
+    fixed[string][0] = true;
+    fixed[string][POINTS-1] = true;
   }
 
   // initialize audio
   minim = new Minim(this);
   speaker = minim.getLineOut(Minim.STEREO, 512);
   mic = minim.getLineIn(Minim.MONO, 512);
-  for(int spring = 0; spring < SPRINGS; spring++) {
-    sounds[spring] = new SpringSound(pos[spring], fixed[spring],
-      map(spring, 0, SPRINGS, 0.9, 0.01), Math.pow(2, spring) * 0.1,
+  for(int string = 0; string < STRINGS; string++) {
+    sounds[string] = new SpringSound(pos[string], fixed[string],
+      map(string, 0, STRINGS, 0.9, 0.01), Math.pow(2, string) * 0.1,
       speaker.sampleRate()/mic.sampleRate());
-    speaker.addSignal(sounds[spring]);
-    mic.addListener(sounds[spring]);
+    speaker.addSignal(sounds[string]);
+    mic.addListener(sounds[string]);
   }
 }
 
@@ -171,15 +171,15 @@ void keyPressed() {
   String letters = "asdfghjkl;";
   String numbers = "1234567890";
   if(numbers.indexOf(key) > -1) {
-      for(int spring = 0; spring == 0; spring++)
+      for(int string = 0; string == 0; string++)
         for(int point = 1; point < POINTS-1; point++)
-          pos[spring][point] += 10*Math.sin(map(point, 0, POINTS, 0, (float) Math.PI*2 * numbers.indexOf(key)));
+          pos[string][point] += 10*Math.sin(map(point, 0, POINTS, 0, (float) Math.PI*2 * numbers.indexOf(key)));
   } else if(letters.indexOf(key) > -1) {
-    for(int spring = 0; spring == 0; spring++)
-      pos[spring][(int) map(letters.indexOf(key), 0, letters.length(), 1, POINTS-1)] += 15;
+    for(int string = 0; string == 0; string++)
+      pos[string][(int) map(letters.indexOf(key), 0, letters.length(), 1, POINTS-1)] += 15;
   } else if(key == 'm') {
-    for(int spring = 0; spring == 0; spring++)
-      sounds[spring].usemic = !sounds[spring].usemic;
+    for(int string = 0; string == 0; string++)
+      sounds[string].usemic = !sounds[string].usemic;
   }
 }
 
