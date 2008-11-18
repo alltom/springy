@@ -190,8 +190,6 @@ void keyPressed() {
   }
 }
 
-//It's a different dirivitive though. so you'll have F= -kx and you'll break that into x'' = -kx/m and then you'll solve for v_n+1 using that equation for acceleration evaluated in the future, and then find x_n+1 using v_n+1.
-
 class SpringSound implements AudioSignal, AudioListener
 {
   private double[] points;
