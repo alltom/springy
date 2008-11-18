@@ -167,13 +167,20 @@ void draw() {
   painting();
 }
 
+double sine(float phase) { return Math.sin(map(phase, 0, 1.0, 0, (float) Math.PI*2)); }
+double saw(float phase) { return (phase % 1.0) - 0.5; }
 void keyPressed() {
+  String toprow = "qwertyuiop";
   String letters = "asdfghjkl;";
   String numbers = "1234567890";
   if(numbers.indexOf(key) > -1) {
-      for(int string = 0; string == 0; string++)
-        for(int point = 1; point < POINTS-1; point++)
-          pos[string][point] += 10*Math.sin(map(point, 0, POINTS, 0, (float) Math.PI*2 * numbers.indexOf(key)));
+    for(int string = 0; string == 0; string++)
+      for(int point = 1; point < POINTS-1; point++)
+        pos[string][point] += 10*sine(map(point, 0, POINTS, 0, 1) * numbers.indexOf(key));
+  } else if(toprow.indexOf(key) > -1) {
+    for(int string = 0; string == 0; string++)
+      for(int point = 1; point < POINTS-1; point++)
+        pos[string][point] += 10*saw(map(point, 0, POINTS, 0, 1) * toprow.indexOf(key));
   } else if(letters.indexOf(key) > -1) {
     for(int string = 0; string == 0; string++)
       pos[string][(int) map(letters.indexOf(key), 0, letters.length(), 1, POINTS-1)] += 15;
