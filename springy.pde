@@ -1,6 +1,7 @@
 import ddf.minim.*;
 import ddf.minim.signals.*;
 import processing.opengl.*;
+import promidi.*;
 
 final int STRINGS = 10;
 final int POINTS = 100;
@@ -13,6 +14,8 @@ Minim minim;
 AudioInput mic;
 AudioOutput speaker;
 SpringSound[] sounds = new SpringSound[STRINGS];
+
+MidiIO midiIO;
 
 // k1: spring constant between points on the same string
 // k2: spring constant between points on adjacent strings
@@ -152,7 +155,12 @@ void setup() {
     speaker.addSignal(sounds[string]);
     mic.addListener(sounds[string]);
   }
-}
+  
+  // initialize MIDI
+/*  midiIO = MidiIO.getInstance(this);
+  midiIO.printDevices();
+  midiIO.openInput(0,0);
+*/}
 
 void stop() {
   if(mic != null) mic.close();
@@ -168,7 +176,7 @@ void draw() {
 }
 
 double sine(float phase) { return Math.sin(map(phase, 0, 1.0, 0, (float) Math.PI*2)); }
-double saw(float phase) { return (phase % 1.0) - 0.5; }
+double saw(float phase) { return (phase + 0.5) % 1.0 - 0.5; }
 void keyPressed() {
   String toprow = "qwertyuiop";
   String letters = "asdfghjkl;";
@@ -188,6 +196,17 @@ void keyPressed() {
     for(int string = 0; string == 0; string++)
       sounds[string].usemic = !sounds[string].usemic;
   }
+}
+
+void noteOn(Note note, int device, int channel){
+  int vel = note.getVelocity();
+  int pit = note.getPitch();
+  System.out.println("noteon " + vel + " " + pit);
+}
+
+void noteOff(Note note, int device, int channel){
+  int pit = note.getPitch();
+  System.out.println("noteoff " + pit);
 }
 
 class SpringSound implements AudioSignal, AudioListener
