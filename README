@@ -1,0 +1,5 @@
+A scanning synthesizer. Builds a connected grid of springs and reads
+rows of them as sound signals for a whirly, surreal effect. Control
+with number keys, some letter keys, and the mouse. Press 'm' to toggle
+excitation with a microphone. (It probably won't start without a
+microphone, even though it's not required.)
