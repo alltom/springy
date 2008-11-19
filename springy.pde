@@ -8,7 +8,6 @@ final int POINTS = 100;
 double[][] pos = new double[STRINGS][POINTS];
 double[][] vel = new double[STRINGS][POINTS];
 boolean[][] fixed = new boolean[STRINGS][POINTS];
-color[] col = new color[STRINGS];
 
 Minim minim;
 AudioInput mic;
@@ -133,10 +132,6 @@ void setup() {
   camera(0.0, -STRINGS*spacing/10, 50.0, // eyeX, eyeY, eyeZ
          0.0, STRINGS*spacing/2, 0.0, // centerX, centerY, centerZ
          0.0, 1.0, 0.0); // upX, upY, upZ
-
-  // pick some nice colors
-  for(int string = 0; string < STRINGS; string++)
-    col[string] = color(random(128)+128, random(128)+128, random(128)+128);
 
   // fix (freeze) the endpoints
   for(int string = 0; string < STRINGS; string++) {
