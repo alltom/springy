@@ -1,7 +1,8 @@
+import traer.physics.*;
+
 import ddf.minim.*;
 import ddf.minim.signals.*;
 import processing.opengl.*;
-import promidi.*;
 
 final int STRINGS = 10;
 final int POINTS = 100;
@@ -13,8 +14,6 @@ Minim minim;
 AudioInput mic;
 AudioOutput speaker;
 SpringSound[] sounds = new SpringSound[STRINGS];
-
-MidiIO midiIO;
 
 // k1: spring constant between points on the same string
 // k2: spring constant between points on adjacent strings
@@ -29,7 +28,7 @@ void physics() {
     for(int point = 0; point < POINTS; point++) {
       // don't physics the fixed points
       if(fixed[string][point]) continue;
-      
+
       // kill switch!
       if(mousePressed) {
         pos[string][point] *= map(mouseY, 0, height, 0.5, 1);
@@ -52,7 +51,7 @@ void physics() {
         force += k2 * (pos[string+1][point] - pos[string][point]);
 
       force -= damping * vel[string][point]; // damping
-      
+
       // Euler integration (lame, but sometimes passable)
       vel[string][point] += force;
       pos[string][point] += vel[string][point];
@@ -66,27 +65,27 @@ void painting() {
   pushMatrix();
   rotateY(angle);
   angle += 0.01;
-  
+
   for(int string = 0; string < STRINGS; string++) {
-    
+
     float radius = 10; // + (STRINGS-string)*4;
 
     pushMatrix();
     translate(0, (STRINGS-string) * spacing);
-    
+
     pushMatrix();
     rotateX(PI/2);
     noFill();
     stroke(255, 0, 0);
     ellipse(0, 0, radius*2, radius*2);
     popMatrix();
-    
+
     for(int point = 0; point < POINTS; point++) {
 
       int c = (int)((pos[string][point] * 128. + 128.));
       fill(c, c, c);
       noStroke();
-      
+
       /* tower */
       pushMatrix();
       rotateY(map(point, 0, POINTS, 0, 2*PI));
@@ -95,7 +94,7 @@ void painting() {
       box(4);
       popMatrix();
       /* */
-      
+
       /* pyramid tower *
       pushMatrix();
       translate(0, -(float) (pos[string][point]));
@@ -105,7 +104,7 @@ void painting() {
       box(4);
       popMatrix();
       /* */
-      
+
       /* half-sphere *
       pushMatrix();
       rotateX(map(string, 0, STRINGS, 0, PI));
@@ -120,7 +119,7 @@ void painting() {
     popMatrix();
 
   }
-  
+
   popMatrix();
 }
 
@@ -128,7 +127,7 @@ void setup() {
   size(500, 400, OPENGL);
   println(width + ", " + height);
   noStroke();
-  
+
   camera(0.0, -STRINGS*spacing/10, 50.0, // eyeX, eyeY, eyeZ
          0.0, STRINGS*spacing/2, 0.0, // centerX, centerY, centerZ
          0.0, 1.0, 0.0); // upX, upY, upZ
@@ -150,12 +149,7 @@ void setup() {
     speaker.addSignal(sounds[string]);
     mic.addListener(sounds[string]);
   }
-  
-  // initialize MIDI
-/*  midiIO = MidiIO.getInstance(this);
-  midiIO.printDevices();
-  midiIO.openInput(0,0);
-*/}
+}
 
 void stop() {
   if(mic != null) mic.close();
@@ -171,7 +165,7 @@ void draw() {
 }
 
 double sine(float phase) { return Math.sin(map(phase, 0, 1.0, 0, (float) Math.PI*2)); }
-double saw(float phase) { return (phase + 0.5) % 1.0 - 0.5; }
+double saw(float phase) { return 2.0 * ((phase + 0.5) % 1.0 - 0.5); }
 void keyPressed() {
   String toprow = "qwertyuiop";
   String letters = "asdfghjkl;";
@@ -191,17 +185,6 @@ void keyPressed() {
     for(int string = 0; string == 0; string++)
       sounds[string].usemic = !sounds[string].usemic;
   }
-}
-
-void noteOn(Note note, int device, int channel){
-  int vel = note.getVelocity();
-  int pit = note.getPitch();
-  System.out.println("noteon " + vel + " " + pit);
-}
-
-void noteOff(Note note, int device, int channel){
-  int pit = note.getPitch();
-  System.out.println("noteoff " + pit);
 }
 
 class SpringSound implements AudioSignal, AudioListener
@@ -225,27 +208,34 @@ class SpringSound implements AudioSignal, AudioListener
     point = 0;
     last = 0;
   }
-  
+
   synchronized void generate(float[] mono) {
     generate(mono, mono);
   }
- 
+
+  private double interpolate(double a, double b, double frac) {
+      return (b - a) * frac + a;
+  }
+
   synchronized void generate(float[] left, float[] right) {
     for ( int i = 0; i < left.length; i += 1 ) {
-      float samp = (float) (points[(int) point] / 100.0 * gain);
+      float samp = (float) (interpolate(points[(int) point],
+                                        points[(((int) point) + 1) % points.length],
+                                        point - (int) point)
+                            / 50.0 * gain);
       samp = last + 0.2 * (samp - last);
       last = samp;
       left[i] = right[i] = samp;
       point = (point + rate) % points.length;
     }
   }
-  
+
   synchronized void samples(float[] samp) {
     if(!usemic) return;
-    
+
     samples(samp, samp);
   }
-  
+
   synchronized void samples(float[] left, float[] right) {
     if(!usemic) return;
 
@@ -256,7 +246,7 @@ class SpringSound implements AudioSignal, AudioListener
         points[(int) p] += left[0];
       p = (p - rate) % points.length;
       if(p < 0) p = points.length + p;
-      
+
       max--;
       if(max <= 0) break;
     }
