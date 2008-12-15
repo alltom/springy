@@ -29,13 +29,6 @@ void physics() {
       // don't physics the fixed points
       if(fixed[string][point]) continue;
 
-      // kill switch!
-      if(mousePressed) {
-        pos[string][point] *= map(mouseY, 0, height, 0.5, 1);
-        vel[string][point] *= map(mouseY, 0, height, 0.5, 1);
-        continue;
-      }
-
       double force = 0;
 
       // horizontal
@@ -55,6 +48,12 @@ void physics() {
       // Euler integration (lame, but sometimes passable)
       vel[string][point] += force;
       pos[string][point] += vel[string][point];
+
+      // kill switch!
+      if(mousePressed) {
+        pos[string][point] *= map(mouseY, 0, height, 0.5, 1);
+        vel[string][point] *= map(mouseY, 0, height, 0.5, 1);
+      }
     }
   }
 }
@@ -147,7 +146,7 @@ void setup() {
       pos[string], // points
       fixed[string], // fixed points
       map(string, 0, STRINGS, 0.9, 0.01), // gain
-      pow(pow(2, 1.0/4.0), string) * 0.1, // rate
+      pow(pow(2, 1.0/1.0), string) * 0.05, // rate
       speaker.sampleRate()/mic.sampleRate() // sample ratio
       );
     speaker.addSignal(sounds[string]);
