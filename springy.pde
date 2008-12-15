@@ -17,7 +17,7 @@ SpringSound[] sounds = new SpringSound[STRINGS];
 
 // k1: spring constant between points on the same string
 // k2: spring constant between points on adjacent strings
-double k1 = 0.005, k2 = 0.005;
+double k1 = 0.005, k2 = 0.05;
 double damping = 0.03;
 
 int spacing = 4;
@@ -143,9 +143,13 @@ void setup() {
   speaker = minim.getLineOut(Minim.STEREO, 512);
   mic = minim.getLineIn(Minim.MONO, 512);
   for(int string = 0; string < STRINGS; string++) {
-    sounds[string] = new SpringSound(pos[string], fixed[string],
-      map(string, 0, STRINGS, 0.9, 0.01), Math.pow(2, string) * 0.1,
-      speaker.sampleRate()/mic.sampleRate());
+    sounds[string] = new SpringSound(
+      pos[string], // points
+      fixed[string], // fixed points
+      map(string, 0, STRINGS, 0.9, 0.01), // gain
+      pow(pow(2, 1.0/4.0), string) * 0.1, // rate
+      speaker.sampleRate()/mic.sampleRate() // sample ratio
+      );
     speaker.addSignal(sounds[string]);
     mic.addListener(sounds[string]);
   }
@@ -160,6 +164,7 @@ void stop() {
 
 void draw() {
   damping = map(mouseY, 0, height, 0, 0.05);
+  k2 = map(mouseX, 0, width, 0.001, 0.1);
   physics();
   painting();
 }
